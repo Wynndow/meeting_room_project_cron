@@ -1,6 +1,6 @@
 ---
 jobs:
   - name: emails
-    schedule: "0 15 16 * * *"
+    schedule: "0 25 16 * * *"
     command: "/bin/bash, emails.sh, creds.token"
     tz: "Europe/London"
