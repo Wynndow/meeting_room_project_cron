@@ -1,1 +1,0 @@
-for i in `seq 3`; do echo "Count ${i}/3 "; sleep 1; done
