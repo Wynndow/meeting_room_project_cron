@@ -1,96 +1,28 @@
-# cf-cron
-Run cron jobs in a Cloud Foundry app.
+# Meeting Rooms 20% Project cron job
 
-### Usage:
+This app schedules a cron job in Cloud Foundry to trigger the email sending functionality of the meeting room app, found [here](https://github.com/Wynndow/meeting_room_project).
+It is created with the 18F cf-cron app which can be found [here](https://github.com/18F/cg-cron).
 
-This app expects a bound service holding credentials and a `crontab.yml` or `crontab.json` with the following format:
+## Technical documentation
 
-**crontab.yml**
+It's a node app which triggers a bash script at 8am every morning. The bash script uses curl to make a POST request to the meeting room app. This triggers the sending of reminder emails.
 
-```
----
-jobs:
-  - name: job-1
-    schedule: "0 * * * * *"
-    command: "/bin/bash, job.sh, creds.key"
-    tz: "America/Los_Angeles"
-    prep:
-      name: job-1-prep
-      command: "/bin/bash, prep.sh, creds.username, creds.password"
-  - name: job-2
-    schedule: "0 * * * * *"
-    command: "/bin/bash, job2.sh, creds.key"
-```
+The app expects a bound service holding credentials, which can be used within the app. The `creds` prefix used in the `crontab.yml` denotes that the parameter will evaluate to a variable held by this bound service.
 
-##### Job Parameters:
-  
-* `prep:`<br> 
-    **Description:** An optional job which runs once, prior to the recurring job. Takes an array-formatted command with optional parameters. Specify a script here to avoid unexpected issues with variable expansion.<br>
+### Running the application
 
-   **Example:** `"/bin/bash, prep.sh"`
-   
-* `command:`<br>
-  **Description:** The recurring job. An array-formatted command with optional parameters. Specify a script here to avoid unexpected issues with variable expansion.<br>
-   **Example:** `"/bin/bash, job.sh, creds.username, creds.password"`
-   
-   Parameters passed to `PREP_JOB` and `CRON_JOB` with the `creds.` prefix will eval to variables held in the service specified by `CF_CREDS`.
-   
-* `schedule:`<br>
-  **Description:** A cron schedule. For more information see: [Cron Ranges](https://www.npmjs.com/package/cron#cron-ranges). This parameter only applies to cronjobs, prep jobs run immediately.<br>
-   **Example:** `"0 * * * * *"`
+First, the bound service needs to be created as below, replacing `{{AUTH_TOKEN}}` with the auth token used in the meeting room app.
 
-* `tz: [optional]`<br>
-  **Description:** Time Zone for the cronjob.<br>
-   **Example:** `"America/Los_Angeles"`
-   
-##### Credential Service:
+`cf cups meeting-rooms-cron-creds -p '{"token":"{{AUTH_TOKEN}}"}'`
 
-This app will take advantage of secrets held in the credentials of either a bound service or a user-provided service. To store arbitrary credentials or non-public variables, use the syntax below to set up a user-provided service.
+Now push the app to the same space as the meeting room app, but don't start it.
 
-```
-cf cups cf-cron-creds -p '{"username":"user", "password":"password"}'
-```
+`cf push --no-start meeting-rooms-cron`
 
-### Running the Example:
+As the app presents no API endpoints, the health check will fail and the app will be terminated. To fix that, it needs to be set to not require a health check.
 
-Create the credential service.
+`cf set-health-check meeting-rooms-cron 'none'`
 
-```
-cf cups cf-cron-creds -p '{"username":"user", "password":"password"}'
-```
+Now start the app.
 
-Push the app.
-
-```
-cf push
-```
-
-The app will:
-
-1. Start the first prep job which counts to 3.
-2. Start the second cronjob which echoes betelgeuse every 3 seconds.
-3. When the first prep completes, start the first cronjob which echoes sirius every 5 seconds.
-
-**Output:**
-
-```
-Found crontab.yml.
-cf-cron started...
-Found 2 jobs.
-0:job-1
-1:job-2
-Preparing for: job-1 with job-1-prep
-Creating Job: job-2
-Prep: job-1-prep - Out: Count 1/3 
-Prep: job-1-prep - Out: Count 2/3 
-Job: job-2 - Out: betelgeuse
-Job: job-2 - Exit: 0
-Prep: job-1-prep - Out: Count 3/3 
-Prep: job-1-prep - Exit: 0
-Finished: job-1-prep
-Creating Job: job-1
-Job: job-2 - Out: betelgeuse
-Job: job-2 - Exit: 0
-Job: job-1 - Out: sirius
-Job: job-1 - Exit: 0
-```
+`cf start meeting-rooms-cron`
