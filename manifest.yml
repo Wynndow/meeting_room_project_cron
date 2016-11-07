@@ -1,6 +1,6 @@
 ---
 applications:
-- name: cf-cron
+- name: meeting-rooms-cron
   no-route: true
   disk_quota: 256M
   memory: 128M
