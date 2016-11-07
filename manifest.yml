@@ -5,6 +5,6 @@ applications:
   disk_quota: 256M
   memory: 128M
   env:
-   CF_CREDS: cf-cron-creds
+   CF_CREDS: meeting-rooms-cron-creds
   services:
-   - cf-cron-creds
+   - meeting-rooms-cron-creds
