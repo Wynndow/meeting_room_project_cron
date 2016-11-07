@@ -8,4 +8,4 @@ applications:
    CF_CREDS: meeting-rooms-cron-creds
   services:
    - meeting-rooms-cron-creds
-  buildpack: python_buildpack
+  buildpack: nodejs_buildpack
